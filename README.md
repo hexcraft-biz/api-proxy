@@ -1,6 +1,6 @@
 # api-proxy 
 
 ```bash
-$ cp ./.env.example ./.env
+$ cp ./.example.env ./.env
 $ sh ./run.sh
 ```
