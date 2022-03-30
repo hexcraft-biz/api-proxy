@@ -1,0 +1,5 @@
+*.swp
+*.swo
+.env
+.dev.env
+.debug.env
