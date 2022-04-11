@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/hexcraft-biz/api-proxy/config"
 	"github.com/hexcraft-biz/api-proxy/route"
@@ -23,8 +22,11 @@ func main() {
 	MustNot(err)
 
 	hostSwitch := make(HostSwitch)
-	hostSwitch[os.Getenv("APP_HOSTNAME")+":"+os.Getenv("APP_PORT")] = route.NewGinMainRouter(cfg)
-	hostSwitch[os.Getenv("PUBLIC_ACCOUNT_HOSTNAME")+":"+os.Getenv("APP_PORT")] = route.NewGinAccountRouter(cfg)
+	hostSwitch[cfg.Env.AppHostname+":"+cfg.Env.AppPort] = route.NewGinMainRouter(cfg)
+
+	for _, pm := range *cfg.ProxyMappings {
+		hostSwitch[pm.PublicHostname+":"+cfg.Env.AppPort] = route.NewGinProxyRouter(cfg, pm.InternalHostname)
+	}
 
 	http.ListenAndServe(":"+cfg.AppPort, hostSwitch)
 }
