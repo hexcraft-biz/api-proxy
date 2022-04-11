@@ -3,3 +3,4 @@
 .env
 .dev.env
 .debug.env
+.DS_Store

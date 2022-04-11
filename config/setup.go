@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/json"
+	"net/http"
 	"os"
 	"time"
 )
@@ -10,6 +12,7 @@ import (
 //================================================================
 type Config struct {
 	*Env
+	ProxyMappings *[]ProxyMapping
 }
 
 func Load() (*Config, error) {
@@ -18,17 +21,22 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	return &Config{Env: env}, nil
+	proxyMappings := []ProxyMapping{}
+
+	getJson(env.ProxyMappginsFile, &proxyMappings)
+
+	return &Config{Env: env, ProxyMappings: &proxyMappings}, nil
 }
 
 //================================================================
 //
 //================================================================
 type Env struct {
-	AppHostname string
-	AppPort     string
-	GinMode     string
-	Location    *time.Location
+	AppHostname       string
+	AppPort           string
+	GinMode           string
+	Location          *time.Location
+	ProxyMappginsFile string
 }
 
 func GetEnv() (*Env, error) {
@@ -40,9 +48,30 @@ func GetEnv() (*Env, error) {
 	}
 
 	return &Env{
-		AppHostname: os.Getenv("APP_HOSTNAME"),
-		AppPort:     os.Getenv("APP_PORT"),
-		GinMode:     os.Getenv("GIN_MODE"),
-		Location:    loc,
+		AppHostname:       os.Getenv("APP_HOSTNAME"),
+		AppPort:           os.Getenv("APP_PORT"),
+		GinMode:           os.Getenv("GIN_MODE"),
+		ProxyMappginsFile: os.Getenv("PROXY_MAPPINGS_JSON_URL"),
+		Location:          loc,
 	}, nil
+}
+
+//================================================================
+//
+//================================================================
+type ProxyMapping struct {
+	PublicHostname   string `json:"public-hostname"`
+	InternalHostname string `json:"internal-hostname"`
+}
+
+var myClient = &http.Client{Timeout: 10 * time.Second}
+
+func getJson(url string, target interface{}) error {
+	r, err := myClient.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(target)
 }
