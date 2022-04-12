@@ -2,6 +2,7 @@ package route
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/karmaksana-io/api-proxy/common"
@@ -11,7 +12,7 @@ import (
 )
 
 // all the routes are defined here
-func NewGinProxyRouter(cfg *config.Config, internalHostname string) *gin.Engine {
+func NewGinAccountRouter(cfg *config.Config) *gin.Engine {
 
 	httpRouter := gin.Default()
 	httpRouter.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
@@ -32,7 +33,7 @@ func NewGinProxyRouter(cfg *config.Config, internalHostname string) *gin.Engine 
 	// Common Endpoint
 	httpRouter.NoRoute(common.NotFound())
 
-	reverseProxyController := controller.NewReverseProxyController(cfg, internalHostname)
+	reverseProxyController := controller.NewReverseProxyController(cfg, os.Getenv("BACKEND_ACCOUNT_HOSTNAME"))
 	httpRouter.Any("/*proxyPath", middleware.TokenIntrospection(), reverseProxyController.Proxy)
 
 	return httpRouter

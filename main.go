@@ -1,10 +1,9 @@
 package main
 
 import (
+	"github.com/karmaksana-io/api-proxy/config"
+	"github.com/karmaksana-io/api-proxy/route"
 	"net/http"
-
-	"github.com/hexcraft-biz/api-proxy/config"
-	"github.com/hexcraft-biz/api-proxy/route"
 )
 
 type HostSwitch map[string]http.Handler

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hexcraft-biz/api-proxy/common"
-	"github.com/hexcraft-biz/api-proxy/config"
+	"github.com/karmaksana-io/api-proxy/common"
+	"github.com/karmaksana-io/api-proxy/config"
 )
 
 // all the routes are defined here

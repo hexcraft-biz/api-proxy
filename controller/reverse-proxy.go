@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hexcraft-biz/api-proxy/config"
+	"github.com/karmaksana-io/api-proxy/config"
 )
 
 type ReverseProxyController struct {
