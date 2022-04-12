@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/karmaksana-io/api-proxy/config"
-	"github.com/karmaksana-io/api-proxy/route"
+	"github.com/hexcraft-biz/api-proxy/config"
+	"github.com/hexcraft-biz/api-proxy/route"
 	"net/http"
 )
 

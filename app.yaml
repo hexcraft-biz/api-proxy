@@ -1,7 +1,7 @@
 module:
   name: api-proxy
   component: proxy 
-  repo: karmaksana-io/api-proxy
+  repo: hexcraft-biz/api-proxy
 
 service:
   ports:

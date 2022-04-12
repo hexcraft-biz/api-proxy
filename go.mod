@@ -1,4 +1,4 @@
-module github.com/karmaksana-io/api-proxy
+module github.com/hexcraft-biz/api-proxy
 
 go 1.17
 
