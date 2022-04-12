@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"net/http"
 	"os"
 	"time"
 )
@@ -51,7 +50,7 @@ func GetEnv() (*Env, error) {
 		AppHostname:       os.Getenv("APP_HOSTNAME"),
 		AppPort:           os.Getenv("APP_PORT"),
 		GinMode:           os.Getenv("GIN_MODE"),
-		ProxyMappginsFile: os.Getenv("PROXY_MAPPINGS_JSON_URL"),
+		ProxyMappginsFile: os.Getenv("PROXY_MAPPINGS_JSON_FILE_PATH"),
 		Location:          loc,
 	}, nil
 }
@@ -64,14 +63,13 @@ type ProxyMapping struct {
 	InternalHostname string `json:"internal-hostname"`
 }
 
-var myClient = &http.Client{Timeout: 10 * time.Second}
-
-func getJson(url string, target interface{}) error {
-	r, err := myClient.Get(url)
+func getJson(filePath string, target interface{}) error {
+	data, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
-	defer r.Body.Close()
 
-	return json.NewDecoder(r.Body).Decode(target)
+	defer data.Close()
+
+	return json.NewDecoder(data).Decode(target)
 }
