@@ -5,15 +5,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hexcraft-biz/api-proxy/config"
 	"github.com/ory/hydra-client-go/client"
 	"github.com/ory/hydra-client-go/client/admin"
 )
 
-func TokenIntrospection() gin.HandlerFunc {
+func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.Request.Header.Get("Authorization")
 		if authHeader == "" {
@@ -29,7 +29,7 @@ func TokenIntrospection() gin.HandlerFunc {
 
 		// Admin API : POST /oauth2/introspect
 		token := parts[1]
-		adminURL, err := url.Parse(os.Getenv("OAUTH2_HOST"))
+		adminURL, err := url.Parse(cfg.Env.Oauth2Host)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -55,13 +55,17 @@ func TokenIntrospection() gin.HandlerFunc {
 				return
 			case *admin.IntrospectOAuth2TokenInternalServerError:
 				fmt.Println(e)
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
+				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 				return
 			}
 		}
 
-		if *res.Payload.Active != true {
+		if res == nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
+		} else if *res.Payload.Active != true {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+		} else {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 		}
 
 		// TODO Cache

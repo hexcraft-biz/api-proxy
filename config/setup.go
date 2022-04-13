@@ -36,6 +36,7 @@ type Env struct {
 	GinMode           string
 	Location          *time.Location
 	ProxyMappginsFile string
+	Oauth2Host        string
 }
 
 func GetEnv() (*Env, error) {
@@ -52,6 +53,7 @@ func GetEnv() (*Env, error) {
 		GinMode:           os.Getenv("GIN_MODE"),
 		ProxyMappginsFile: os.Getenv("PROXY_MAPPINGS_JSON_FILE_PATH"),
 		Location:          loc,
+		Oauth2Host:        os.Getenv("OAUTH2_HOST"),
 	}, nil
 }
 
