@@ -1,18 +1,24 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/hexcraft-biz/api-proxy/config"
 	"github.com/hexcraft-biz/api-proxy/route"
-	"net/http"
 )
+
+type App struct {
+	mainHandler http.Handler
+	HostSwitch  HostSwitch
+}
 
 type HostSwitch map[string]http.Handler
 
-func (hs HostSwitch) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if handler := hs[r.Host]; handler != nil {
+func (a App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if handler := a.HostSwitch[r.Host]; handler != nil {
 		handler.ServeHTTP(w, r)
 	} else {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		a.mainHandler.ServeHTTP(w, r)
 	}
 }
 
@@ -21,13 +27,14 @@ func main() {
 	MustNot(err)
 
 	hostSwitch := make(HostSwitch)
-	hostSwitch[cfg.Env.AppHostname+":"+cfg.Env.AppPort] = route.NewGinMainRouter(cfg)
+
+	app := App{mainHandler: route.NewGinMainRouter(cfg), HostSwitch: hostSwitch}
 
 	for _, pm := range *cfg.ProxyMappings {
-		hostSwitch[pm.PublicHostname+":"+cfg.Env.AppPort] = route.NewGinProxyRouter(cfg, pm.InternalHostname)
+		app.HostSwitch[pm.PublicHostname+":"+cfg.Env.AppPort] = route.NewGinProxyRouter(cfg, pm.InternalHostname)
 	}
 
-	http.ListenAndServe(":"+cfg.AppPort, hostSwitch)
+	http.ListenAndServe(":"+cfg.AppPort, app)
 }
 
 func MustNot(err error) {
