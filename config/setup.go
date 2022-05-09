@@ -31,12 +31,14 @@ func Load() (*Config, error) {
 //
 //================================================================
 type Env struct {
-	AppHostname       string
-	AppPort           string
-	GinMode           string
-	Location          *time.Location
-	ProxyMappginsFile string
-	Oauth2Host        string
+	AppHostname        string
+	AppPort            string
+	GinMode            string
+	Location           *time.Location
+	ProxyMappginsFile  string
+	Oauth2AdminHost    string
+	Oauth2PublicHost   string
+	Oauth2HeaderPrefix string
 }
 
 func GetEnv() (*Env, error) {
@@ -48,12 +50,14 @@ func GetEnv() (*Env, error) {
 	}
 
 	return &Env{
-		AppHostname:       os.Getenv("APP_HOSTNAME"),
-		AppPort:           os.Getenv("APP_PORT"),
-		GinMode:           os.Getenv("GIN_MODE"),
-		ProxyMappginsFile: os.Getenv("PROXY_MAPPINGS_JSON_FILE_PATH"),
-		Location:          loc,
-		Oauth2Host:        os.Getenv("OAUTH2_HOST"),
+		AppHostname:        os.Getenv("APP_HOSTNAME"),
+		AppPort:            os.Getenv("APP_PORT"),
+		GinMode:            os.Getenv("GIN_MODE"),
+		ProxyMappginsFile:  os.Getenv("PROXY_MAPPINGS_JSON_FILE_PATH"),
+		Location:           loc,
+		Oauth2AdminHost:    os.Getenv("OAUTH2_ADMIN_HOST"),
+		Oauth2PublicHost:   os.Getenv("OAUTH2_PUBLIC_HOST"),
+		Oauth2HeaderPrefix: os.Getenv("OAUTH2_HEADER_PREFIX"),
 	}, nil
 }
 

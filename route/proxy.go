@@ -33,7 +33,13 @@ func NewGinProxyRouter(cfg *config.Config, internalHostname string) *gin.Engine 
 	httpRouter.NoRoute(common.NotFound())
 
 	reverseProxyController := controller.NewReverseProxyController(cfg, internalHostname)
-	httpRouter.Any("/*proxyPath", middleware.TokenIntrospection(cfg), reverseProxyController.Proxy)
+	httpRouter.Any(
+		"/*proxyPath",
+		middleware.TokenIntrospection(cfg),
+		middleware.Userinfo(cfg),
+		// TODO add mideleware about check scope-resource mapping
+		reverseProxyController.Proxy,
+	)
 
 	return httpRouter
 
