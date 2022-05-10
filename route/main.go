@@ -13,7 +13,7 @@ func NewGinMainRouter(cfg *config.Config) *gin.Engine {
 
 	httpRouter := gin.Default()
 	httpRouter.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("[GIN-Custom-Log] %s - [%s] \"%s %s %s %s %d %s \"%s\" %s\"\n",
+		return fmt.Sprintf("[GIN-Main-Log] %s - [%s] \"%s %s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
 			param.TimeStamp.Format("2006-01-02 - 15:04:05"),
 			param.Request.Host,
