@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/hexcraft-biz/api-proxy/config"
@@ -15,6 +16,7 @@ type App struct {
 type HostSwitch map[string]http.Handler
 
 func (a App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("request from", r.Host)
 	if handler := a.HostSwitch[r.Host]; handler != nil {
 		handler.ServeHTTP(w, r)
 	} else {
@@ -31,6 +33,7 @@ func main() {
 	app := App{mainHandler: route.NewGinMainRouter(cfg), HostSwitch: hostSwitch}
 
 	for _, pm := range *cfg.ProxyMappings {
+		fmt.Println("proxy-setting", pm.PublicHostname, pm.InternalHostname)
 		app.HostSwitch[pm.PublicHostname+":"+cfg.Env.AppPort] = route.NewGinProxyRouter(cfg, pm.InternalHostname)
 	}
 
