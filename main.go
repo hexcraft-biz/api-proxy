@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/hexcraft-biz/api-proxy/config"
@@ -17,8 +18,14 @@ type HostSwitch map[string]http.Handler
 
 func (a App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("[TEST-LOG] request from", r.Host)
-	if handler := a.HostSwitch[r.Host]; handler != nil {
-		fmt.Println("[TEST-LOG] Go proxy route", r.Host)
+
+	requestHost := r.Host
+	if host, _, err := net.SplitHostPort(r.Host); err == nil {
+		requestHost = host
+	}
+
+	if handler := a.HostSwitch[requestHost]; handler != nil {
+		fmt.Println("[TEST-LOG] Go proxy route", r.Host, requestHost)
 		handler.ServeHTTP(w, r)
 	} else {
 		fmt.Println("[TEST-LOG] Go main route")
@@ -37,8 +44,8 @@ func main() {
 	fmt.Println("[TEST-LOG] ENV : ", cfg.Env)
 
 	for _, pm := range *cfg.ProxyMappings {
-		fmt.Println("[TEST-LOG] proxy-setting : ", pm.PublicHostname, cfg.Env.AppPort, pm.InternalHostname)
-		app.HostSwitch[pm.PublicHostname+":"+cfg.Env.AppPort] = route.NewGinProxyRouter(cfg, pm.InternalHostname)
+		fmt.Println("[TEST-LOG] proxy-setting : ", pm.PublicHostname, pm.InternalHostname)
+		app.HostSwitch[pm.PublicHostname] = route.NewGinProxyRouter(cfg, pm.InternalHostname)
 	}
 
 	http.ListenAndServe(":"+cfg.AppPort, app)
