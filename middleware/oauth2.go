@@ -43,7 +43,7 @@ type hydraError struct {
 
 func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authHeader := ctx.Request.Header.Get("Authorization")
+		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
@@ -76,8 +76,8 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			} else {
 				if introspect.ClientID != nil && introspect.Scope != nil {
-					ctx.Header("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Id", *introspect.ClientID)
-					ctx.Header("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Scope", *introspect.Scope)
+					ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Id", *introspect.ClientID)
+					ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Scope", *introspect.Scope)
 				}
 			}
 		} else if resp.StatusCode == http.StatusUnauthorized {
@@ -96,7 +96,7 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 
 func Userinfo(cfg *config.Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authHeader := ctx.Request.Header.Get("Authorization")
+		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
@@ -125,14 +125,78 @@ func Userinfo(cfg *config.Config) gin.HandlerFunc {
 			json.NewDecoder(resp.Body).Decode(&userinfo)
 
 			if userinfo.UserID != nil && userinfo.UserEmail != nil {
-				ctx.Header("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Id", *userinfo.UserID)
-				ctx.Header("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Email", *userinfo.UserEmail)
+				ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Id", *userinfo.UserID)
+				ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Email", *userinfo.UserEmail)
 			}
 		} else if resp.StatusCode == http.StatusUnauthorized {
 			err := hydraError{}
 			json.NewDecoder(resp.Body).Decode(&err)
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.ErrorDescription})
 			return
+		} else {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
+			return
+		}
+	}
+}
+
+type oAuth2Scope struct {
+	ID                 string `json:"id"`
+	ResourceDomainName string `json:"resourceDomainName"`
+	ResourceName       string `json:"resourceName"`
+	Name               string `json:"name"`
+	Type               string `json:"type"`
+	CreatedAt          string `json:"createdAt"`
+	UpdatedAt          string `json:"updatedAt"`
+}
+
+type oAuth2Scopes []oAuth2Scope
+
+type oAuth2ScopesError struct {
+	Message string `json:"message"`
+}
+
+func VerifyScope(cfg *config.Config, internalHostname string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		clientScope := ctx.Request.Header.Get("X-" + cfg.Env.Oauth2HeaderPrefix + "-Client-Scope")
+
+		if clientScope == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+			return
+		}
+
+		clientScopes := strings.Split(clientScope, " ")
+
+		// Scope API : GET /scopes/v1/scopes?resourceDomainName={internalHostname}&name=clientScope1|clientScope2
+		client := &http.Client{}
+
+		scopesUrl := cfg.Env.Oauth2ScopesHost + "/scopes/v1/scopes"
+		req, err := http.NewRequest("GET", scopesUrl, nil)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
+			return
+		}
+
+		q := req.URL.Query()
+		q.Add("resourceDomainName", internalHostname)
+		q.Add("name", strings.Join(clientScopes[:], "|"))
+		req.URL.RawQuery = q.Encode()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			scopes := oAuth2Scopes{}
+			json.NewDecoder(resp.Body).Decode(&scopes)
+
+			if len(scopes) == 0 {
+				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+				return
+			}
 		} else {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 			return

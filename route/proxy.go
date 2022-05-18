@@ -37,7 +37,7 @@ func NewGinProxyRouter(cfg *config.Config, internalHostname string) *gin.Engine 
 		"/*proxyPath",
 		middleware.TokenIntrospection(cfg),
 		middleware.Userinfo(cfg),
-		// TODO add mideleware about check scope-resource mapping
+		middleware.VerifyScope(cfg, internalHostname),
 		reverseProxyController.Proxy,
 	)
 

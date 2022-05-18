@@ -38,6 +38,7 @@ type Env struct {
 	ProxyMappginsFile  string
 	Oauth2AdminHost    string
 	Oauth2PublicHost   string
+	Oauth2ScopesHost   string
 	Oauth2HeaderPrefix string
 }
 
@@ -57,6 +58,7 @@ func GetEnv() (*Env, error) {
 		Location:           loc,
 		Oauth2AdminHost:    os.Getenv("OAUTH2_ADMIN_HOST"),
 		Oauth2PublicHost:   os.Getenv("OAUTH2_PUBLIC_HOST"),
+		Oauth2ScopesHost:   os.Getenv("OAUTH2_SCOPES_HOST"),
 		Oauth2HeaderPrefix: os.Getenv("OAUTH2_HEADER_PREFIX"),
 	}, nil
 }

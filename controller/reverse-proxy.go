@@ -25,6 +25,8 @@ func (r ReverseProxyController) Proxy(ctx *gin.Context) {
 		panic(err)
 	}
 
+	ctx.Request.Header.Del("Authorization")
+
 	proxy := httputil.NewSingleHostReverseProxy(remote)
 	proxy.Director = func(req *http.Request) {
 		req.Header = ctx.Request.Header
