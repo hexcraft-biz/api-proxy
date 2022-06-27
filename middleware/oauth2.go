@@ -76,8 +76,8 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			} else {
 				if introspect.ClientID != nil && introspect.Scope != nil {
-					ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Id", *introspect.ClientID)
-					ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Scope", *introspect.Scope)
+					ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Id", *introspect.ClientID)
+					ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Scope", *introspect.Scope)
 				}
 			}
 		} else if resp.StatusCode == http.StatusUnauthorized {
@@ -112,7 +112,7 @@ func Userinfo(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		req.Header.Add("Authorization", authHeader)
+		req.Header.Set("Authorization", authHeader)
 		resp, err := client.Do(req)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
@@ -125,8 +125,8 @@ func Userinfo(cfg *config.Config) gin.HandlerFunc {
 			json.NewDecoder(resp.Body).Decode(&userinfo)
 
 			if userinfo.UserID != nil && userinfo.UserEmail != nil {
-				ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Id", *userinfo.UserID)
-				ctx.Request.Header.Add("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Email", *userinfo.UserEmail)
+				ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Id", *userinfo.UserID)
+				ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Email", *userinfo.UserEmail)
 			}
 		} else if resp.StatusCode == http.StatusUnauthorized {
 			err := hydraError{}
