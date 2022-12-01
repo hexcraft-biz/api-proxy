@@ -56,6 +56,9 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 		}
 		token := parts[1]
 
+		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Client-Id")
+		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Client-Scope")
+
 		// Admin API : POST /oauth2/introspect
 		// Content-Type: application/x-www-form-urlencoded
 		resp, err := http.PostForm(
@@ -111,6 +114,9 @@ func Userinfo(cfg *config.Config) gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
 			return
 		}
+
+		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Authenticated-User-Id")
+		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Authenticated-User-Email")
 
 		req.Header.Set("Authorization", authHeader)
 		resp, err := client.Do(req)
