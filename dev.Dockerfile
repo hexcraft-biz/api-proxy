@@ -1,24 +1,20 @@
-ARG GO_VERSION=1.17.8
+# syntax=docker/dockerfile:1.0.0-experimental
+FROM golang:1.21-alpine as golang-builder
 
-FROM golang:${GO_VERSION}-alpine AS builder
+RUN apk update && apk add --no-cache git openssh-client
+RUN mkdir -p -m 0600 /root/.ssh && touch /root/.ssh/known_hosts
+RUN ssh-keyscan github.com > /root/.ssh/known_hosts
+RUN git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
+RUN go env -w GOPRIVATE=github.com/hexcraft-biz/*
 
-RUN apk update && apk add alpine-sdk git && rm -rf /var/cache/apk/*
-
-WORKDIR /var/www
-
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
-
+WORKDIR /go/src/github.com/hexcraft-biz/api-proxy
 COPY . .
-RUN go build -o ./app ./main.go
+RUN --mount=type=ssh go mod tidy
+RUN --mount=type=ssh go install ./
 
-FROM alpine:3.15
-
-RUN mkdir -p /api
-WORKDIR /api
-COPY --from=builder /var/www/app /var/www/.proxyMappings.json .
-
-ADD entrypoint.sh entrypoint.sh
-ENTRYPOINT ["./entrypoint.sh"]
-CMD ["./app"]
+FROM alpine
+COPY --from=golang-builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/zoneinfo.zip
+COPY --from=golang-builder /go/bin/api-proxy /var/www/app/
+WORKDIR /var/www/app
+EXPOSE 9525
+ENTRYPOINT /var/www/app/api-proxy

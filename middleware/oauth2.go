@@ -25,15 +25,17 @@ type hydraIntrospect struct {
 }
 
 type hydraUserinfo struct {
-	Aud       *[]string `json:"aud"`
-	Iat       *int      `json:"iat"`
-	Iss       *string   `json:"iss"`
-	Acr       *string   `json:"acr,omitempty"`
-	AuthTime  *int      `json:"auth_time,omitempty"`
-	Rat       *int      `json:"rat,omitempty"`
-	Sub       *string   `json:"sub,omitempty"`
-	UserID    *string   `json:"user_id,omitempty"`
-	UserEmail *string   `json:"user_email,omitempty"`
+	Aud                    *[]string `json:"aud"`
+	Iat                    *int      `json:"iat"`
+	Iss                    *string   `json:"iss"`
+	Acr                    *string   `json:"acr,omitempty"`
+	AuthTime               *int      `json:"auth_time,omitempty"`
+	Rat                    *int      `json:"rat,omitempty"`
+	Sub                    *string   `json:"sub,omitempty"`
+	UserID                 *string   `json:"user_id,omitempty"`
+	UserIdentifier         *string   `json:"user_identifier,omitempty"`
+	UserIdentifierMedia    *string   `json:"user_identifier_media,omitempty"`
+	AuthenticationProvider *string   `json:"authentication_provider,omitempty"`
 }
 
 type hydraError struct {
@@ -42,31 +44,31 @@ type hydraError struct {
 }
 
 func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
 		token := parts[1]
 
-		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Client-Id")
-		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Client-Scope")
+		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Client-Id")
+		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Client-Scope")
 
 		// Admin API : POST /oauth2/introspect
 		// Content-Type: application/x-www-form-urlencoded
 		resp, err := http.PostForm(
-			cfg.Env.Oauth2AdminHost+"/oauth2/introspect",
+			cfg.OAuth2AdminHost+"/oauth2/introspect",
 			url.Values{"token": {token}},
 		)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
 			return
 		}
 		defer resp.Body.Close()
@@ -76,20 +78,20 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 			json.NewDecoder(resp.Body).Decode(&introspect)
 
 			if *introspect.Active == false {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			} else {
 				if introspect.ClientID != nil && introspect.Scope != nil {
-					ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Id", *introspect.ClientID)
-					ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Client-Scope", *introspect.Scope)
+					c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Client-Id", *introspect.ClientID)
+					c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Client-Scope", *introspect.Scope)
 				}
 			}
 		} else if resp.StatusCode == http.StatusUnauthorized {
 			err := hydraError{}
 			json.NewDecoder(resp.Body).Decode(&err)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.ErrorDescription})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.ErrorDescription})
 			return
 		} else {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 			return
 		}
 
@@ -98,30 +100,30 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 }
 
 func Userinfo(cfg *config.Config) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
 
 		// Public API : POST /userinfo
 		client := &http.Client{}
 
-		userinfoUrl := cfg.Env.Oauth2PublicHost + "/userinfo"
+		userinfoUrl := cfg.OAuth2PublicHost + "/userinfo"
 		req, err := http.NewRequest("GET", userinfoUrl, nil)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
 			return
 		}
 
-		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Authenticated-User-Id")
-		ctx.Request.Header.Del("X-" + cfg.Env.Oauth2HeaderPrefix + "-Authenticated-User-Email")
+		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Authenticated-User-Id")
+		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Authenticated-User-Email")
 
 		req.Header.Set("Authorization", authHeader)
 		resp, err := client.Do(req)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
 			return
 		}
 		defer resp.Body.Close()
@@ -130,81 +132,25 @@ func Userinfo(cfg *config.Config) gin.HandlerFunc {
 			userinfo := hydraUserinfo{}
 			json.NewDecoder(resp.Body).Decode(&userinfo)
 
-			if userinfo.UserID != nil && userinfo.UserEmail != nil {
-				ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Id", *userinfo.UserID)
-				ctx.Request.Header.Set("X-"+cfg.Env.Oauth2HeaderPrefix+"-Authenticated-User-Email", *userinfo.UserEmail)
+			/*
+				X-{infix}-Authenticated-User-Id: {pilgrimID}
+				X-{infix}-Authenticated-User: {authentication_provider}:{media}:{identifier}
+			*/
+
+			if userinfo.UserID != nil && userinfo.UserIdentifier != nil && userinfo.UserIdentifierMedia != nil && userinfo.AuthenticationProvider != nil {
+				c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Authenticated-User-Id", *userinfo.UserID)
+				c.Request.Header.Set(
+					"X-"+cfg.OAuth2HeaderInfix+"-Authenticated-User",
+					*userinfo.AuthenticationProvider+":"+*userinfo.UserIdentifierMedia+":"+*userinfo.UserIdentifier,
+				)
 			}
 		} else if resp.StatusCode == http.StatusUnauthorized {
 			err := hydraError{}
 			json.NewDecoder(resp.Body).Decode(&err)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.ErrorDescription})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.ErrorDescription})
 			return
 		} else {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
-			return
-		}
-	}
-}
-
-type oAuth2Scope struct {
-	ID                 string `json:"id"`
-	ResourceDomainName string `json:"resourceDomainName"`
-	ResourceName       string `json:"resourceName"`
-	Name               string `json:"name"`
-	Type               string `json:"type"`
-	CreatedAt          string `json:"createdAt"`
-	UpdatedAt          string `json:"updatedAt"`
-}
-
-type oAuth2Scopes []oAuth2Scope
-
-type oAuth2ScopesError struct {
-	Message string `json:"message"`
-}
-
-func VerifyScope(cfg *config.Config, internalHostname string) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		clientScope := ctx.Request.Header.Get("X-" + cfg.Env.Oauth2HeaderPrefix + "-Client-Scope")
-
-		if clientScope == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
-			return
-		}
-
-		clientScopes := strings.Split(clientScope, " ")
-
-		// Scope API : GET /scopes/v1/scopes?resourceDomainName={internalHostname}&name=clientScope1|clientScope2
-		client := &http.Client{}
-
-		scopesUrl := cfg.Env.Oauth2ScopesHost + "/scopes/v1/scopes"
-		req, err := http.NewRequest("GET", scopesUrl, nil)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
-			return
-		}
-
-		q := req.URL.Query()
-		q.Add("resourceDomainName", internalHostname)
-		q.Add("name", strings.Join(clientScopes[:], "|"))
-		req.URL.RawQuery = q.Encode()
-
-		resp, err := client.Do(req)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err})
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode == http.StatusOK {
-			scopes := oAuth2Scopes{}
-			json.NewDecoder(resp.Body).Decode(&scopes)
-
-			if len(scopes) == 0 {
-				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-				return
-			}
-		} else {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError)})
 			return
 		}
 	}

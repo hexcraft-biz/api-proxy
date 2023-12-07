@@ -1,119 +1,93 @@
 package config
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"strconv"
 	"time"
+
+	app "github.com/hexcraft-biz/envmod-app"
+	"github.com/hexcraft-biz/feature"
 )
 
 // ================================================================
 //
 // ================================================================
 type Config struct {
-	*Env
-	ProxyMappings *[]ProxyMapping
+	*app.App
+	*feature.Dogmas
+	ProxyAllowCORS         bool
+	ProxyAllowCORSMaxAge   time.Duration
+	OAuth2AdminHost        string
+	OAuth2PublicHost       string
+	OAuth2HeaderInfix      string
+	ContextKeyTargetPrefix string
 }
 
 func Load() (*Config, error) {
-	env, err := GetEnv()
+	emApp, err := app.New()
 	if err != nil {
 		return nil, err
 	}
 
-	proxyMappings := []ProxyMapping{}
-
-	getJson(env.ProxyMappginsFile, &proxyMappings)
-
-	return &Config{Env: env, ProxyMappings: &proxyMappings}, nil
-}
-
-// ================================================================
-//
-// ================================================================
-type Env struct {
-	AppHostname        string
-	AppPort            string
-	GinMode            string
-	Location           *time.Location
-	ProxyMappginsFile  string
-	ProxyAllowCORS     bool
-	Oauth2AdminHost    string
-	Oauth2PublicHost   string
-	Oauth2ScopesHost   string
-	Oauth2HeaderPrefix string
-}
-
-func GetEnv() (*Env, error) {
-	var err error
-
-	env := &Env{
-		AppHostname: os.Getenv("APP_HOSTNAME"),
-		AppPort:     os.Getenv("APP_PORT"),
-		GinMode:     os.Getenv("GIN_MODE"),
-	}
-
-	if env.Location, err = time.LoadLocation(os.Getenv("TIMEZONE")); err != nil {
+	emDogmas, err := feature.NewDogmas(emApp.AppRootUrl)
+	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv("PROXY_MAPPINGS_JSON_FILE_PATH") != "" {
-		env.ProxyMappginsFile = os.Getenv("PROXY_MAPPINGS_JSON_FILE_PATH")
-	} else {
-		return nil, errors.New("Invalid environment variable : PROXY_MAPPINGS_JSON_FILE_PATH")
+	config := &Config{
+		App:                    emApp,
+		Dogmas:                 emDogmas,
+		OAuth2HeaderInfix:      os.Getenv("OAUTH2_HEADER_INFIX"),
+		ContextKeyTargetPrefix: "api-proxy-target-",
 	}
 
 	if os.Getenv("PROXY_ALLOW_CORS") != "" {
-		if env.ProxyAllowCORS, err = strconv.ParseBool(os.Getenv("PROXY_ALLOW_CORS")); err != nil {
+		if config.ProxyAllowCORS, err = strconv.ParseBool(os.Getenv("PROXY_ALLOW_CORS")); err != nil {
 			return nil, err
 		}
 	} else {
 		return nil, errors.New("Invalid environment variable : PROXY_ALLOW_CORS")
 	}
 
+	if value, exist, err := FetchOptIntEnv(os.Getenv("PROXY_ALLOW_CORS_MAX_AGE")); err != nil {
+		return nil, err
+	} else if exist == true {
+		config.ProxyAllowCORSMaxAge = time.Duration(value) * time.Second
+	}
+
 	if os.Getenv("OAUTH2_ADMIN_HOST") != "" {
-		env.Oauth2AdminHost = os.Getenv("OAUTH2_ADMIN_HOST")
+		config.OAuth2AdminHost = os.Getenv("OAUTH2_ADMIN_HOST")
 	} else {
 		return nil, errors.New("Invalid environment variable : OAUTH2_ADMIN_HOST")
 	}
 
 	if os.Getenv("OAUTH2_PUBLIC_HOST") != "" {
-		env.Oauth2PublicHost = os.Getenv("OAUTH2_PUBLIC_HOST")
+		config.OAuth2PublicHost = os.Getenv("OAUTH2_PUBLIC_HOST")
 	} else {
 		return nil, errors.New("Invalid environment variable : OAUTH2_PUBLIC_HOST")
 	}
 
-	if os.Getenv("OAUTH2_SCOPES_HOST") != "" {
-		env.Oauth2ScopesHost = os.Getenv("OAUTH2_SCOPES_HOST")
+	if os.Getenv("OAUTH2_HEADER_INFIX") != "" {
+		config.OAuth2HeaderInfix = os.Getenv("OAUTH2_HEADER_INFIX")
 	} else {
-		return nil, errors.New("Invalid environment variable : OAUTH2_SCOPES_HOST")
+		return nil, errors.New("Invalid environment variable : OAUTH2_HEADER_INFIX")
 	}
 
-	if os.Getenv("OAUTH2_HEADER_PREFIX") != "" {
-		env.Oauth2HeaderPrefix = os.Getenv("OAUTH2_HEADER_PREFIX")
-	} else {
-		return nil, errors.New("Invalid environment variable : OAUTH2_HEADER_PREFIX")
-	}
-
-	return env, nil
+	return config, nil
 }
 
-// ================================================================
-//
-// ================================================================
-type ProxyMapping struct {
-	PublicHostname   string `json:"public-hostname"`
-	InternalHostname string `json:"internal-hostname"`
-}
-
-func getJson(filePath string, target interface{}) error {
-	data, err := os.Open(filePath)
-	if err != nil {
-		return err
+func FetchOptIntEnv(envStr string) (value int, exist bool, err error) {
+	if envStr != "" {
+		exist = true
+		if intVal, err := strconv.Atoi(envStr); err != nil {
+			return value, exist, err
+		} else {
+			value = intVal
+		}
+	} else {
+		exist = false
 	}
 
-	defer data.Close()
-
-	return json.NewDecoder(data).Decode(target)
+	return value, exist, nil
 }

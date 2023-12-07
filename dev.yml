@@ -1,0 +1,29 @@
+version: '3.7'
+
+networks:
+  intranet:
+
+services:
+  api-proxy:
+    container_name: api-proxy
+    build:
+      context: .
+      dockerfile: ./dev.Dockerfile
+      args:
+        DOCKER_BUILDKIT: 1
+      ssh:
+        - default
+    ports:
+      - "9525:9525"
+    env_file:
+      - ./.env
+    restart: on-failure
+    # depends_on:
+      # - hr-mysql-db
+      # - redis
+    networks:
+      - intranet
+
+networks:
+  intranet: 
+    name: intranet

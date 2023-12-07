@@ -5,15 +5,26 @@ API-PROXY authorizes incoming HTTP requests. It can be the Policy Enforcement Po
 ```bash
 Set up env file
 $ cp ./.env.example ./.env
-# Don't forget change OAuth2 related info at .env file.
-$ cp ./example.proxyMappings.json ./.proxyMappings.json
-# Don't forget add your resource services proxy rule to .proxyMappings.json
+# Don't forget change OAuth2 & Dogmas related info at .env file.
 ```
 
 ## Deployment
-- Standalone Testing Flow
+- Standalone Testing Flow with docker-compose
 ```bash
-$ sh ./run.sh for testing
+$ docker-compose -f dev.yml up --build -d
 ```
 - Integration testing
   - Please flollow [hexc-deploy](https://github.com/hexcraft-biz/hexc-deploy) README.md step.
+
+## API Endpoint
+### HealthCheck
+#### GET /healthcheck/v1/ping
+- Params
+  - None
+- Response
+  - 200
+	```json
+	{
+	  "message": "OK"
+	}
+	```
