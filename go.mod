@@ -1,14 +1,12 @@
 module github.com/hexcraft-biz/drawbridge
 
-go 1.21.1
-
-toolchain go1.21.4
+go 1.21.5
 
 require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/hexcraft-biz/envmod-app v0.0.2
-	github.com/hexcraft-biz/feature v0.0.61
+	github.com/hexcraft-biz/feature v0.0.71
 	github.com/hexcraft-biz/xuuid v0.0.1
 )
 
@@ -23,8 +21,8 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.4.0 // indirect
-	github.com/hexcraft-biz/envmod-mysql v0.0.32 // indirect
-	github.com/hexcraft-biz/her v0.0.5 // indirect
+	github.com/hexcraft-biz/envmod-mysql v0.0.33 // indirect
+	github.com/hexcraft-biz/her v0.0.6 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
@@ -36,10 +34,10 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
