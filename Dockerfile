@@ -8,14 +8,14 @@ RUN git config --global url."ssh://git@github.com/".insteadOf "https://github.co
 RUN go env -w GOPRIVATE=github.com/hexcraft-biz/*
 
 WORKDIR /go/src/github.com/hexcraft-biz
-RUN --mount=type=ssh git clone git@github.com:hexcraft-biz/api-proxy.git
-WORKDIR /go/src/github.com/hexcraft-biz/api-proxy
+RUN --mount=type=ssh git clone git@github.com:hexcraft-biz/drawbridge.git
+WORKDIR /go/src/github.com/hexcraft-biz/drawbridge
 RUN --mount=type=ssh go mod tidy
 RUN --mount=type=ssh go install ./
 
 FROM alpine
 COPY --from=golang-builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/zoneinfo.zip
-COPY --from=golang-builder /go/bin/api-proxy /var/www/app/
+COPY --from=golang-builder /go/bin/drawbridge /var/www/app/
 WORKDIR /var/www/app
 EXPOSE 80
-ENTRYPOINT /var/www/app/api-proxy
+ENTRYPOINT /var/www/app/drawbridge

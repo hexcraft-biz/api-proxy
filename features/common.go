@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hexcraft-biz/api-proxy/config"
-	"github.com/hexcraft-biz/api-proxy/controllers"
+	"github.com/hexcraft-biz/drawbridge/config"
+	"github.com/hexcraft-biz/drawbridge/controllers"
 )
 
 func LoadCommon(e *gin.Engine, cfg *config.Config) {

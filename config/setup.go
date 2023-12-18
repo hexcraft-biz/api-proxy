@@ -39,7 +39,7 @@ func Load() (*Config, error) {
 		App:                    emApp,
 		Dogmas:                 emDogmas,
 		OAuth2HeaderInfix:      os.Getenv("OAUTH2_HEADER_INFIX"),
-		ContextKeyTargetPrefix: "api-proxy-target-",
+		ContextKeyTargetPrefix: "drawbridge-target-",
 	}
 
 	if os.Getenv("PROXY_ALLOW_CORS") != "" {

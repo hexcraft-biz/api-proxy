@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hexcraft-biz/api-proxy/config"
+	"github.com/hexcraft-biz/drawbridge/config"
 	"github.com/hexcraft-biz/xuuid"
 )
 

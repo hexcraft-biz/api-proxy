@@ -1,4 +1,4 @@
-module github.com/hexcraft-biz/api-proxy
+module github.com/hexcraft-biz/drawbridge
 
 go 1.21.1
 

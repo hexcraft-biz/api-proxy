@@ -1,2 +1,2 @@
 config:
-  api-proxy: /app.yaml
+  drawbridge: /app.yaml

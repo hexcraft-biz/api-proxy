@@ -4,8 +4,8 @@ networks:
   intranet:
 
 services:
-  api-proxy:
-    container_name: api-proxy
+  drawbridge:
+    container_name: drawbridge
     build:
       context: .
       dockerfile: ./dev.Dockerfile

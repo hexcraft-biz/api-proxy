@@ -1,7 +1,7 @@
 module:
-  name: api-proxy
+  name: drawbridge
   component: proxy 
-  repo: hexcraft-biz/api-proxy
+  repo: hexcraft-biz/drawbridge
 
 service:
   ports:

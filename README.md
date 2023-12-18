@@ -1,5 +1,5 @@
-# api-proxy
-API-PROXY authorizes incoming HTTP requests. It can be the Policy Enforcement Point in your cloud architecture, i.e. a reverse proxy in front of your upstream resource API server that rejects unauthorized requests and forwards authorized ones to your resource server. 
+# Drawbridge
+Proxy authorizes incoming HTTP requests. It can be the Policy Enforcement Point in your cloud architecture, i.e. a reverse proxy in front of your upstream resource API server that rejects unauthorized requests and forwards authorized ones to your resource server. 
 
 ## Set up
 ```bash

@@ -6,16 +6,16 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/hexcraft-biz/api-proxy/config"
-	"github.com/hexcraft-biz/api-proxy/controllers"
-	"github.com/hexcraft-biz/api-proxy/middleware"
+	"github.com/hexcraft-biz/drawbridge/config"
+	"github.com/hexcraft-biz/drawbridge/controllers"
+	"github.com/hexcraft-biz/drawbridge/middleware"
 )
 
 func LoadProxy(e *gin.Engine, cfg *config.Config) {
 	c := controllers.NewProxyController(cfg)
 
 	e.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("[API-Proxy-Log] %s - [%s] \"%s %s %s %s %d %s \"%s\" %s\"\n",
+		return fmt.Sprintf("[Proxy-Log] %s - [%s] \"%s %s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
 			param.TimeStamp.Format("2006-01-02 - 15:04:05"),
 			param.Request.Host,
