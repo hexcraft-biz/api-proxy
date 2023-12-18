@@ -10,22 +10,31 @@ import (
 )
 
 type App struct {
-	mainHandler http.Handler
-	HostSwitch  HostSwitch
+	proxyHandler http.Handler
+	hostSwitch   hostSwitch
 }
 
-type HostSwitch map[string]http.Handler
+type hostSwitch map[string]http.Handler
 
 func (a App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Extract the host from the request
 	requestHost := r.Host
+
+	// If the host contains a port, remove it to get just the host
 	if host, _, err := net.SplitHostPort(r.Host); err == nil {
 		requestHost = host
 	}
 
-	if handler := a.HostSwitch[requestHost]; handler != nil {
+	// Check if the host is an IP address
+	if ip := net.ParseIP(requestHost); ip != nil {
+		// If it's an IP address, use the default handler ("main")
+		a.hostSwitch["main"].ServeHTTP(w, r)
+	} else if handler := a.hostSwitch[requestHost]; handler != nil {
+		// If there's a specific handler for the host, use it
 		handler.ServeHTTP(w, r)
 	} else {
-		a.mainHandler.ServeHTTP(w, r)
+		// If no specific handler is found, use the default proxy handler
+		a.proxyHandler.ServeHTTP(w, r)
 	}
 }
 
@@ -33,10 +42,13 @@ func main() {
 	cfg, err := config.Load()
 	MustNot(err)
 
+	commenEngine := GetCommonEngine(cfg)
+
 	app := App{
-		mainHandler: GetProxyEngine(cfg),
-		HostSwitch: HostSwitch{
-			cfg.AppHost: GetCommonEngine(cfg),
+		proxyHandler: GetProxyEngine(cfg),
+		hostSwitch: hostSwitch{
+			"main":      commenEngine,
+			cfg.AppHost: commenEngine,
 		},
 	}
 

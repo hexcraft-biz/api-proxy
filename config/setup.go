@@ -30,7 +30,7 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	emDogmas, err := feature.NewDogmas(emApp.AppRootUrl)
+	emDogmas, err := feature.NewDogmas()
 	if err != nil {
 		return nil, err
 	}
