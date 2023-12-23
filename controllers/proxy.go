@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -24,7 +23,6 @@ func NewProxyController(cfg *config.Config) *ProxyController {
 func (r *ProxyController) Proxy() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		route := c.MustGet(constants.MiddlewareKeyProxyRoute).(*feature.Route)
-		fmt.Println(route.Method, route.RootUrl, route.Feature, route.Path)
 		if remote, err := url.Parse(route.RootUrl); err != nil {
 			c.AbortWithStatusJSON(her.NewErrorWithMessage(http.StatusInternalServerError, "drawbridge: "+err.Error(), nil).HttpR())
 		} else {

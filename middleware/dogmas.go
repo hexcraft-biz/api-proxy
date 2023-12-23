@@ -34,9 +34,7 @@ func Dogmas(cfg *config.Config) gin.HandlerFunc {
 			requesterId,
 		); err != nil {
 			c.AbortWithStatusJSON(her.NewError(http.StatusForbidden, err, nil).HttpR())
-			return
 		} else {
-
 			c.Set(constants.MiddlewareKeyProxyRoute, resultDestination)
 		}
 	}
