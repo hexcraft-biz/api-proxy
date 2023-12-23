@@ -16,12 +16,11 @@ import (
 type Config struct {
 	*app.App
 	*feature.Dogmas
-	ProxyAllowCORS         bool
-	ProxyAllowCORSMaxAge   time.Duration
-	OAuth2AdminHost        string
-	OAuth2PublicHost       string
-	OAuth2HeaderInfix      string
-	ContextKeyTargetPrefix string
+	ProxyAllowCORS       bool
+	ProxyAllowCORSMaxAge time.Duration
+	OAuth2AdminHost      string
+	OAuth2PublicHost     string
+	OAuth2HeaderInfix    string
 }
 
 func Load() (*Config, error) {
@@ -36,10 +35,9 @@ func Load() (*Config, error) {
 	}
 
 	config := &Config{
-		App:                    emApp,
-		Dogmas:                 emDogmas,
-		OAuth2HeaderInfix:      os.Getenv("OAUTH2_HEADER_INFIX"),
-		ContextKeyTargetPrefix: "drawbridge-target-",
+		App:               emApp,
+		Dogmas:            emDogmas,
+		OAuth2HeaderInfix: os.Getenv("OAUTH2_HEADER_INFIX"),
 	}
 
 	if os.Getenv("PROXY_ALLOW_CORS") != "" {

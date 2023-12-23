@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hexcraft-biz/drawbridge/config"
+	"github.com/hexcraft-biz/drawbridge/constants"
 	"github.com/hexcraft-biz/her"
 	"github.com/hexcraft-biz/xuuid"
 )
@@ -36,7 +37,7 @@ func Dogmas(cfg *config.Config) gin.HandlerFunc {
 			return
 		} else {
 
-			c.Set(cfg.ContextKeyTargetPrefix+"rootUrl", resultDestination.RootUrl)
+			c.Set(constants.MiddlewareKeyProxyRoute, resultDestination)
 		}
 	}
 }
