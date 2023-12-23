@@ -24,7 +24,7 @@ func Dogmas(cfg *config.Config) gin.HandlerFunc {
 		if resultDestination, err := cfg.Dogmas.CanAccess(
 			c.Request.Header.Get("X-"+cfg.OAuth2HeaderInfix+"-Client-Scope"),
 			c.Request.Method,
-			c.Request.Host+c.Request.URL.Path,
+			c.Request.URL.Scheme+"://"+c.Request.URL.Host+c.Request.URL.Path,
 			requesterId,
 		); err != nil {
 			c.AbortWithStatusJSON(her.NewError(http.StatusForbidden, err, nil).HttpR())
