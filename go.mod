@@ -6,7 +6,8 @@ require (
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/hexcraft-biz/envmod-app v0.0.3
-	github.com/hexcraft-biz/feature v0.0.76
+	github.com/hexcraft-biz/feature v0.0.77
+	github.com/hexcraft-biz/her v0.0.6
 	github.com/hexcraft-biz/xuuid v0.0.1
 )
 
@@ -23,7 +24,6 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/hexcraft-biz/envmod-mysql v0.0.34 // indirect
-	github.com/hexcraft-biz/her v0.0.6 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
