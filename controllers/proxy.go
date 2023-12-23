@@ -29,6 +29,11 @@ func (r *ProxyController) Proxy() gin.HandlerFunc {
 			c.Request.Header.Del("Authorization")
 
 			proxy := httputil.NewSingleHostReverseProxy(remote)
+			// TODO: full proxy route:
+			// 	Method
+			//	RootUrl
+			//	Feature
+			//	Path
 			proxy.Director = func(req *http.Request) {
 				req.Header = c.Request.Header
 				req.Host = remote.Host
