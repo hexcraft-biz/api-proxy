@@ -45,12 +45,14 @@ type hydraError struct {
 }
 
 func parseHydraIntrospect(oauth2AdminRootUrl, tokenstring string) (*hydraIntrospect, her.Error) {
-	parts := strings.SplitN(tokenstring, " ", 2)
-	if len(parts) != 2 || parts[0] != "Bearer" {
+	tokenParts := strings.SplitN(tokenstring, " ", 2)
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 		return nil, her.NewErrorWithMessage(http.StatusUnauthorized, "Invalid token", nil)
 	}
 
-	resp, err := http.PostForm(oauth2AdminRootUrl+"/oauth2/introspect", url.Values{"token": {parts[1]}})
+	// Admin API : POST /oauth2/introspect
+	// Content-Type: application/x-www-form-urlencoded
+	resp, err := http.PostForm(oauth2AdminRootUrl+"/oauth2/introspect", url.Values{"token": {tokenParts[1]}})
 	if err != nil {
 		return nil, her.NewError(http.StatusInternalServerError, err, nil)
 	}
@@ -62,6 +64,8 @@ func parseHydraIntrospect(oauth2AdminRootUrl, tokenstring string) (*hydraIntrosp
 		json.NewDecoder(resp.Body).Decode(introspect)
 		if *introspect.Active == false {
 			return nil, her.ErrUnauthorized
+		} else if introspect.ClientID == nil || introspect.Scope == nil {
+			return nil, her.NewErrorWithMessage(http.StatusUnauthorized, "Invalid Token", nil)
 		}
 
 		return introspect, nil
@@ -80,16 +84,17 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Client-Id")
 		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Client-Scope")
 
-		if accessToken, err := parseHydraIntrospect(cfg.OAuth2AdminHost, c.GetHeader("Authorization")); err != nil {
+		/*
+			Header Format:
+				X-{infix}-Client-Id: {OAuth2 Client ID}
+				X-{infix}-Client-Scope: {OAuth2 Client Scope}
+		*/
+
+		if introspectResp, err := parseHydraIntrospect(cfg.OAuth2AdminHost, c.GetHeader("Authorization")); err != nil {
 			c.AbortWithStatusJSON(err.HttpR())
 		} else {
-			if accessToken.ClientID != nil {
-				c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Client-Id", *accessToken.ClientID)
-			}
-
-			if accessToken.Scope != nil {
-				c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Client-Scope", *accessToken.Scope)
-			}
+			c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Client-Id", *introspectResp.ClientID)
+			c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Client-Scope", *introspectResp.Scope)
 		}
 
 		// TODO Cache
@@ -99,11 +104,12 @@ func TokenIntrospection(cfg *config.Config) gin.HandlerFunc {
 // ================================================================
 func parseHydraUserinfo(oauth2PublicRootUrl, tokenstring string) (*hydraUserinfo, her.Error) {
 	if tokenstring == "" {
-		return nil, her.NewErrorWithMessage(http.StatusUnauthorized, "Invalid token", nil)
+		return nil, her.NewErrorWithMessage(http.StatusUnauthorized, "Token must be exist", nil)
 	}
 
 	client := &http.Client{}
 
+	// Public API : GET /userinfo
 	userinfoUrl := oauth2PublicRootUrl + "/userinfo"
 	req, err := http.NewRequest("GET", userinfoUrl, nil)
 	if err != nil {
@@ -137,28 +143,34 @@ func Userinfo(cfg *config.Config) gin.HandlerFunc {
 		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Authenticated-User-Id")
 		c.Request.Header.Del("X-" + cfg.OAuth2HeaderInfix + "-Authenticated-User")
 
+		/*
+			Header Format:
+				X-{infix}-Authenticated-User-Id: {pilgrimID}
+				X-{infix}-Authenticated-User: {authentication_provider}:{media}:{identifier}
+		*/
+
 		if userinfo, err := parseHydraUserinfo(cfg.OAuth2PublicHost, c.GetHeader("Authorization")); err != nil {
 			c.AbortWithStatusJSON(err.HttpR())
 		} else {
 
 			if userinfo.UserID != nil {
 				c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Authenticated-User-Id", *userinfo.UserID)
-			}
 
-			authenticationProvider, media, identifier := "", "", ""
-			if userinfo.AuthenticationProvider != nil {
-				authenticationProvider = *userinfo.AuthenticationProvider
-			}
+				authenticationProvider, media, identifier := "", "", ""
+				if userinfo.AuthenticationProvider != nil {
+					authenticationProvider = *userinfo.AuthenticationProvider
+				}
 
-			if userinfo.UserIdentifierMedia != nil {
-				media = *userinfo.UserIdentifierMedia
-			}
+				if userinfo.UserIdentifierMedia != nil {
+					media = *userinfo.UserIdentifierMedia
+				}
 
-			if userinfo.UserIdentifier != nil {
-				identifier = *userinfo.UserIdentifier
-			}
+				if userinfo.UserIdentifier != nil {
+					identifier = *userinfo.UserIdentifier
+				}
 
-			c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Authenticated-User", authenticationProvider+":"+media+":"+identifier)
+				c.Request.Header.Set("X-"+cfg.OAuth2HeaderInfix+"-Authenticated-User", authenticationProvider+":"+media+":"+identifier)
+			}
 		}
 	}
 }
