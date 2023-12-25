@@ -6,7 +6,7 @@ require (
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/hexcraft-biz/envmod-app v0.0.3
-	github.com/hexcraft-biz/feature v0.0.78
+	github.com/hexcraft-biz/feature v0.0.80
 	github.com/hexcraft-biz/her v0.0.6
 	github.com/hexcraft-biz/xuuid v0.0.1
 )

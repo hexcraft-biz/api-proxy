@@ -45,6 +45,8 @@ github.com/hexcraft-biz/envmod-mysql v0.0.34 h1:mdbab+FcQ+u80UTJ/EEbBHbUhmR3eLsu
 github.com/hexcraft-biz/envmod-mysql v0.0.34/go.mod h1:8HicQrMPCNDkLHKxjDWDO5TuEMTMqzxtf16IegjuNEQ=
 github.com/hexcraft-biz/feature v0.0.78 h1:t2Y71Bdch+Zo83aDgA0Ap0Y3LcHPCCFLgv8sXmH7mVQ=
 github.com/hexcraft-biz/feature v0.0.78/go.mod h1:KObd5b6207WM6fCHpx7v+JbHI4ZdfLfVKTFv1P74o2I=
+github.com/hexcraft-biz/feature v0.0.80 h1:IdPb8rLIbQoI9fROXYLLTJXcPokAsTYSDVmdHDAVtqE=
+github.com/hexcraft-biz/feature v0.0.80/go.mod h1:KObd5b6207WM6fCHpx7v+JbHI4ZdfLfVKTFv1P74o2I=
 github.com/hexcraft-biz/her v0.0.6 h1:CZSWPRFHzGROANOQFCbHGqxKBrnKTDpJ7oJPSj7KyNg=
 github.com/hexcraft-biz/her v0.0.6/go.mod h1:ETdrgTyG2XoSncKpGmXSeqpTQR8ALX8S+wFZ44WgSZI=
 github.com/hexcraft-biz/xuuid v0.0.1 h1:CibTkJRBPMfEJLsXlvkq0AjcYRVVo+T4WNYCLWyAdUc=
